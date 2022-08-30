@@ -1,20 +1,35 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+import express from 'express'
+import { initialize } from 'express-openapi'
+import { serve, setup } from 'swagger-ui-express'
+import morgan from 'morgan'
+import cookieParser from 'cookie-parser'
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+import apiDoc from './api/api-doc.js'
 
-var app = express();
+const app = express()
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(morgan('dev'))
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
+app.use(cookieParser())
+app.use(express.static('./public'))
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+initialize({
+  app,
+  apiDoc: apiDoc,
+  paths: './api/paths',
+})
 
-module.exports = app;
+app.use(
+  '/api-documentation',
+  serve,
+  setup(null, {
+    swaggerOptions: {
+      url: 'http://localhost:3000/api-docs',
+    },
+  })
+)
+
+app.listen(3000)
+
+export default app
